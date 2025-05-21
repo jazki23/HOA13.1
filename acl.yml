@@ -1,43 +1,31 @@
----
-- name: Block IP Address using UFW on Ubuntu
+- name: Block IP Address
   hosts: checkpoint
   become: true
-  gather_facts: yes
-
   tasks:
     - name: Ensure UFW is installed
       apt:
         name: ufw
         state: present
-        update_cache: yes
 
-    - name: Ensure UFW allows SSH
-      command: ufw allow ssh
-      register: ssh_allow_result
-      changed_when: "'Skipping adding existing rule' not in ssh_allow_result.stdout"
+    - name: Ensure UFW is enabled and started
+      service:
+        name: ufw
+        state: started
+        enabled: yes
+
+    - name: Check if rule already exists
+      shell: ufw status | grep -q "192.168.56.108"
+      register: ufw_check
       ignore_errors: true
 
-    - name: Ensure UFW is enabled
-      command: ufw enable
-      register: ufw_enable_result
-      failed_when: "'command may disrupt existing ssh connections' not in ufw_enable_result.stderr"
-      changed_when: "'Firewall is active and enabled on system startup' in ufw_enable_result.stdout or 'Firewall is active' in ufw_enable_result.stderr"
-      ignore_errors: true
+    - name: Create new firewall rule if not exists
+      ufw:
+        rule: deny
+        from: 192.168.56.108
+      when: ufw_check.rc != 0
 
-    - name: Check if the IP rule already exists
-      command: ufw status numbered
-      register: ufw_status
-
-    - name: Add deny rule if not already present
-      command: ufw deny from 192.168.56.101
-      when: "'192.168.56.101' not in ufw_status.stdout"
-      notify:
-        - Reload UFW
-
-    - name: Reload UFW to apply any changes
-      command: ufw reload
-      when: "'192.168.56.101' not in ufw_status.stdout"
-
-  handlers:
-    - name: Reload UFW
-      command: ufw reload
+    - name: Restart UFW Firewall
+      service:
+        name: ufw
+        state: restarted
+        enabled: yes
