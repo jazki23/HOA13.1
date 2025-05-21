@@ -4,6 +4,9 @@
   become: true
   gather_facts: yes
 
+  vars:
+    blocked_ip: 192.168.56.102
+
   tasks:
     - name: Ensure UFW is installed
       apt:
@@ -23,20 +26,16 @@
       changed_when: "'Skipping adding existing rule' not in ssh_allow_result.stdout"
       ignore_errors: true
 
-    - name: Check current UFW rules
-      command: ufw status verbose
-      register: ufw_status
+    - name: Check if IP is already blocked
+      shell: ufw status verbose | grep -w "{{ blocked_ip }}"
+      register: ufw_block_check
+      ignore_errors: true
       changed_when: false
 
-    - name: Add deny rule for 192.168.56.102 if not already blocked
-      command: ufw deny from 192.168.56.102
-      when: "'192.168.56.102' not in ufw_status.stdout"
-      notify:
-        - Reload UFW
-
-    - name: Reload UFW to apply any changes
-      command: ufw reload
-      when: "'192.168.56.102' not in ufw_status.stdout"
+    - name: Add deny rule for blocked IP if not already present
+      command: ufw deny from {{ blocked_ip }}
+      when: ufw_block_check.rc != 0
+      notify: Reload UFW
 
   handlers:
     - name: Reload UFW
