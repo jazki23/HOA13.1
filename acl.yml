@@ -26,16 +26,9 @@
       changed_when: "'Skipping adding existing rule' not in ssh_allow_result.stdout"
       ignore_errors: true
 
-    - name: Check if IP is already blocked
-      become: true
-      shell: ufw status verbose | grep "{{ blocked_ip }}"
-      register: ufw_block_check
-      ignore_errors: true
-      changed_when: false
-
-    - name: Add deny rule for blocked IP if not already present
+    - name: Add deny rule for blocked IP (safe to re-run)
       command: ufw deny from {{ blocked_ip }}
-      when: ufw_block_check.rc != 0
+      ignore_errors: true
       notify: Reload UFW
 
   handlers:
