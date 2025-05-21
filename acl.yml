@@ -14,7 +14,7 @@
         enabled: yes
 
     - name: Check if rule already exists
-      shell: ufw status | grep -q "192.168.56.108"
+      shell: ufw status | grep -q "192.168.56.101"
       register: ufw_check
       ignore_errors: true
 
