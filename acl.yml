@@ -1,26 +1,31 @@
----
-- name: Unified Playbook for Blocking and Unblocking IPs
+- name: Block IP Address
   hosts: checkpoint
-  connection: httpapi
-  gather_facts: false
-
-  vars:
-    action: "block"  # Set to "block" or "unblock"
-    source_ip: 172.17.13.98
-    destination_ip: 192.168.0.10
-    ansible_network_os: checkpoint
-
+  become: true
   tasks:
-    - name: Block IP address
-      include_role:
-        name: acl_manager
-        tasks_from: block_ip
-      when: action == "block"
-      tags: [block]
+    - name: Ensure UFW is installed
+      apt:
+        name: ufw
+        state: present
 
-    - name: Unblock IP address
-      include_role:
-        name: acl_manager
-        tasks_from: unblock_ip
-      when: action == "unblock"
-      tags: [unblock]
+    - name: Ensure UFW is enabled and started
+      service:
+        name: ufw
+        state: started
+        enabled: yes
+
+    - name: Check if rule already exists
+      shell: ufw status | grep -q "192.168.56.101"
+      register: ufw_check
+      ignore_errors: true
+
+    - name: Create new firewall rule if not exists
+      ufw:
+        rule: deny
+        from: 192.168.56.101
+      when: ufw_check.rc != 0
+
+    - name: Restart UFW Firewall
+      service:
+        name: ufw
+        state: restarted
+        enabled: yes
