@@ -1,12 +1,16 @@
-- name: block IP address
+---
+- name: Block IP address on Check Point firewall
   hosts: checkpoint
   connection: httpapi
+  gather_facts: no
+
+  vars:
+    ansible_network_os: check_point.mgmt.checkpoint
+    source_ip: 172.17.13.98
+    destination_ip: 192.168.0.10
 
   tasks:
-    - include_role:
+    - name: Include block_ip task from acl_manager role
+      include_role:
         name: acl_manager
         tasks_from: block_ip
-      vars:
-        source_ip: 172.17.13.98
-        destination_ip: 192.168.0.10
-        ansible_network_os: checkpoint
