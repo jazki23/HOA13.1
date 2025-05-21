@@ -14,17 +14,19 @@
     - name: Ensure UFW is enabled
       command: ufw enable
       register: ufw_enable_result
-      failed_when: "'command may disrupt existing ssh connections' not in ufw_enable_result.stderr and ufw_enable_result.rc != 0"
+      failed_when: "'command may disrupt existing ssh connections' not in ufw_enable_result.stderr"
       changed_when: "'Firewall is active and enabled on system startup' in ufw_enable_result.stdout or 'Firewall is active' in ufw_enable_result.stderr"
       ignore_errors: true
 
-    - name: Check if rule already exists
+    - name: Check if the IP rule already exists
       command: ufw status numbered
       register: ufw_status
 
     - name: Add deny rule if not already present
       command: ufw deny from 192.168.56.101
       when: "'192.168.56.101' not in ufw_status.stdout"
+      notify:
+        - Reload UFW
 
     - name: Reload UFW to apply any changes
       command: ufw reload
