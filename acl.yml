@@ -28,15 +28,15 @@
       register: ufw_status
       changed_when: false
 
-    - name: Add deny rule for 192.168.56.101 if not already blocked
-      command: ufw deny from 192.168.56.101
-      when: "'192.168.56.101' not in ufw_status.stdout"
+    - name: Add deny rule for 192.168.56.102 if not already blocked
+      command: ufw deny from 192.168.56.102
+      when: "'192.168.56.102' not in ufw_status.stdout"
       notify:
         - Reload UFW
 
     - name: Reload UFW to apply any changes
       command: ufw reload
-      when: "'192.168.56.101' not in ufw_status.stdout"
+      when: "'192.168.56.102' not in ufw_status.stdout"
 
   handlers:
     - name: Reload UFW
