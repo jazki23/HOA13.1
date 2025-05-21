@@ -5,7 +5,7 @@
 ansible_connection=httpapi
 ansible_network_os=check_point.mgmt.checkpoint
 ansible_user=admin
-ansible_password=your_password
+ansible_password=sanjosekier09
 ansible_httpapi_use_ssl=true
 ansible_httpapi_validate_certs=false
 ansible_port=443
