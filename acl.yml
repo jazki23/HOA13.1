@@ -27,7 +27,8 @@
       ignore_errors: true
 
     - name: Check if IP is already blocked
-      shell: ufw status verbose | grep -w "{{ blocked_ip }}"
+      become: true
+      shell: ufw status verbose | grep "{{ blocked_ip }}"
       register: ufw_block_check
       ignore_errors: true
       changed_when: false
